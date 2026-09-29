@@ -16,4 +16,5 @@ jobs:
       - run: pip install -r requirements.txt
       - env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
         run: python -m src.ingest

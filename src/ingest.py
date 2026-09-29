@@ -1,4 +1,5 @@
-"""Fetch current market data for tracked coins from CoinGecko and store it in Supabase."""
+#Fetch current market data for tracked coins from CoinGecko and store it in Supabase.
+import os
 import sys
 import requests
 from src.config import COINGECKO_API_URL, COINS, PRICE_CHANGE_PERCENTAGES, VS_CURRENCY
@@ -12,7 +13,13 @@ def fetch_market_data():
         "ids": ",".join(COINS),
         "price_change_percentage": PRICE_CHANGE_PERCENTAGES,
     }
-    response = requests.get(COINGECKO_API_URL, params=params, timeout=15)
+    headers = {}
+    api_key = os.environ.get("COINGECKO_API_KEY")
+    if api_key:
+        headers["x-cg-demo-api-key"] = api_key
+    response = requests.get(
+        COINGECKO_API_URL, params=params, headers=headers, timeout=15
+    )
     response.raise_for_status()
     return response.json()
 
