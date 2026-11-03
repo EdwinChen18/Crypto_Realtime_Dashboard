@@ -7,7 +7,7 @@ cryptocurrencies from the CoinGecko API, stores a snapshot in a Supabase
 (PostgreSQL) database every 30 minutes through GitHub Actions, and a Streamlit
 dashboard visualizes price trends, correlations, and volatility over time.
 
-**Live demo:** [add your Streamlit link here]
+**Live demo:** https://crypto-realtime-dashboard.streamlit.app/
 
 ![Dashboard](docs/dashboard.png)
 
@@ -164,7 +164,7 @@ role. It does not need the CoinGecko key because it only reads from Supabase.
 - [x] Ingestion script and Supabase schema
 - [x] GitHub Actions automation (every 30 minutes)
 - [x] Streamlit dashboard with trend, ATH, volume, correlation, and volatility views
-- [ ] Deployed publicly on Streamlit Community Cloud
+- [x] Deployed publicly on Streamlit Community Cloud
 
 ## Author
 
