@@ -19,9 +19,19 @@ load_dotenv()
 
 st.set_page_config(page_title="Crypto Real-Time Dashboard", layout="wide")
 
+# Clean tick labels for the log-scale volume chart (1-2-5 sequence)
+VOL_TICK_VALS = [1e7, 2e7, 5e7, 1e8, 2e8, 5e8, 1e9, 2e9, 5e9, 1e10, 2e10, 5e10, 1e11]
+VOL_TICK_TEXT = ["10M", "20M", "50M", "100M", "200M", "500M", "1B", "2B", "5B", "10B", "20B", "50B", "100B"]
+
+def fmt_usd(v):
+    """Format a USD amount as $450M or $3.2B."""
+    if v >= 1e9:
+        return f"${v / 1e9:.1f}B"
+    return f"${v / 1e6:.0f}M"
+
 st.cache_data(ttl=300)
 def load_data(hours: int = 48) -> pd.DataFrame:
-    db_url = os.environ.get("SUPABASE_DB_URL")
+    db_url = os.environ.get("SUPABASE_DB_URL") or st.secrets.get("SUPABASE_DB_URL")
     if not db_url:
         st.error("SUPABASE_DB_URL is not set. Check .env file")
         st.stop()
@@ -133,9 +143,57 @@ with c2:
     fig4 = go.Figure(go.Bar(
         x=[COIN_LABELS[c] for c in vol_df["coin_id"]],
         y=vol_df["total_volume_24h"],
+        text=[fmt_usd(v) for v in vol_df["total_volume_24h"]],
+        textposition="outside",
+        hovertemplate="%{x}<br>$%{y:,.0f}<extra></extra>",
     ))
-    fig4.update_layout(template="plotly_dark", yaxis_type="log", yaxis_title="Volume (USD)", margin=dict(t=10))
+    fig4.update_layout(template="plotly_dark", yaxis= dict(type="log",title="Volume (USD)",tickvals=VOL_TICK_VALS, ticktext=VOL_TICK_TEXT,), margin=dict(t=10))
     st.plotly_chart(fig4, use_container_width=True)
+
+st.divider()
+
+# --- Correlation matrix + rolling volatility ---
+c3, c4 = st.columns(2)
+
+# Pivot to wide format: rows = timestamp, columns = coin, values = price
+wide_df = df[df["coin_id"].isin(selected_coins)].pivot(
+    index="fetched_at", columns="coin_id", values="current_price_usd" 
+)
+returns = wide_df.pct_change().dropna()
+
+with c3:
+    st.subheader("Price Correlation")
+    if len(returns) < 3:
+        st.info("Not enough data points yet to compute correlation.")
+    else:
+        corr = returns.corr()
+        corr.columns = [COIN_LABELS[c] for c in corr.columns]
+        corr.index = [COIN_LABELS[c] for c in corr.index]
+        fig5 = go.Figure(go.Heatmap(
+            z = corr.values, x = corr.columns, y = corr.index, 
+            colorscale="RdBu", zmid=0, zmin= -1, zmax=1, 
+            text=corr.round(2).values, texttemplate="%{text}",
+        ))
+        fig5.update_layout(template="plotly_dark", margin=dict(t=10))
+        st.plotly_chart(fig5, use_container_width=True)
+
+with c4: 
+    st.subheader("Rolling Volatility")
+    window = st.slider("Window (data points)", min_value=3, max_value=30, value=6)
+    vol = returns.rolling(window=window).std().dropna()
+    fig6 = go.Figure()
+    for coin_id in selected_coins:
+        if coin_id not in vol.columns:
+            continue
+        fig6.add_trace(go.Scatter(
+            x=vol.index, y=vol[coin_id], mode="lines", name=COIN_LABELS[coin_id],
+        ))
+    fig6.update_layout(
+        template="plotly_dark", hovermode="x unified",
+        yaxis_title="Rolling Std Dev of Returns", margin=dict(t=10),
+        legend=dict(orientation="h", y=-0.3),
+    )
+    st.plotly_chart(fig6, use_container_width=True)
 
 st.divider()
 st.subheader("Latest Snapshot")
