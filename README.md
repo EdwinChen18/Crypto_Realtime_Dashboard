@@ -4,12 +4,41 @@
 
 End-to-end data pipeline: a Python script pulls live market data for six major
 cryptocurrencies from the CoinGecko API, stores a snapshot in a Supabase
-(PostgreSQL) database every 30 minutes through GitHub Actions, and a Streamlit
+(PostgreSQL) database on a GitHub Actions schedule through GitHub Actions, and a Streamlit
 dashboard visualizes price trends, correlations, and volatility over time.
 
 **Live demo:** https://crypto-realtime-dashboard.streamlit.app/
 
 ![Dashboard](docs/dashboard.png)
+
+## Key Findings
+
+Window: 2026-09-24 to 2026-11-04 (about 41 days, 6 coins, 204 snapshots).
+Volatility and correlation use 41 daily returns per coin.
+
+- **All six coins fell.** Bitcoin fell the least (-4.8%) and Cardano the most
+  (-20.6%), roughly four times as much. In between: BNB -7.6%, ETH -10.0%,
+  XRP -15.0%, SOL -18.7%.
+- **Higher volatility went with bigger losses.** Ranking the coins by daily
+  volatility (BTC 1.44%, BNB 1.72%, ETH 1.92%, XRP 2.07%, SOL 2.09%, ADA 3.22%)
+  gives the same order as ranking them by loss, from smallest to largest.
+  Cardano's daily volatility was about 2.2 times Bitcoin's.
+- **The coins moved together.** Every pair had a daily return correlation between
+  0.68 and 0.91. BTC and ETH were the most closely linked (0.91) and ADA and BTC
+  the least (0.68), which is still strongly positive.
+- **Deepest drawdowns** from the highest observed price: ADA -32.4%, SOL -25.9%,
+  XRP -23.4%, ETH -20.1%, BNB -12.9%, BTC -11.7%.
+
+**Caveats**
+- One window in a falling market. The link between volatility and losses is an
+  observation across six coins, not a general rule, and says nothing about rising markets.
+- Daily close is the last snapshot of each UTC day. Snapshots are irregular (about
+  5 per day), so the spacing between closes varies and adds noise to volatility
+  and correlation estimates.
+- Drawdowns are measured on sampled snapshots, so intraday lows may be deeper.
+- The pipeline is scheduled every 30 minutes, but GitHub Actions delivered about one
+  run every 5 hours, so hourly or time-of-day analysis is not supported by this data.
+- Descriptive analysis only, not a forecast or investment advice.
 
 ## Architecture
 
@@ -119,8 +148,8 @@ Crypto_Realtime_Dashboard/
 ## Automation
 
 `.github/workflows/fetch_data.yml` runs `src/ingest.py` every 30 minutes with
-GitHub Actions. Add these repository secrets under
-Settings > Secrets and variables > Actions:
+GitHub Actions. GitHub treats scheduled runs as best-effort, so the observed cadence is lower. 
+Add these repository secrets under Settings > Secrets and variables > Actions:
 
 - `SUPABASE_DB_URL`
 - `COINGECKO_API_KEY`
@@ -158,11 +187,12 @@ role. It does not need the CoinGecko key because it only reads from Supabase.
 - Price alerts when a coin moves more than a set percentage.
 - Forecasting and anomaly detection on the stored history.
 - Historical backfill using CoinGecko's market chart endpoint.
+- Observed cadence is about 5 snapshots per day.
 
 ## Status
 
 - [x] Ingestion script and Supabase schema
-- [x] GitHub Actions automation (every 30 minutes)
+- [x] GitHub Actions automation
 - [x] Streamlit dashboard with trend, ATH, volume, correlation, and volatility views
 - [x] Deployed publicly on Streamlit Community Cloud
 

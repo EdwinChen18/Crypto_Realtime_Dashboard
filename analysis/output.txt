@@ -1,0 +1,36 @@
+﻿
+Window: 2026-09-24 23:03:14.062682+00:00 to 2026-11-04 22:04:35.106421+00:00
+Snapshots: 204 (about 5.1 per day)
+Daily return observations per coin (min): 41
+
+=== VOLATILITY (std of daily returns, %) ===
+coin
+ADA    3.22
+SOL    2.09
+XRP    2.07
+ETH    1.92
+BNB    1.72
+BTC    1.44
+dtype: float64
+
+=== CORRELATION (daily returns) ===
+coin   ADA   BNB   BTC   ETH   SOL   XRP
+coin                                    
+ADA   1.00  0.72  0.68  0.73  0.82  0.78
+BNB   0.72  1.00  0.71  0.75  0.77  0.69
+BTC   0.68  0.71  1.00  0.91  0.77  0.79
+ETH   0.73  0.75  0.91  1.00  0.78  0.80
+SOL   0.82  0.77  0.77  0.78  1.00  0.84
+XRP   0.78  0.69  0.79  0.80  0.84  1.00
+Highest pair: ('BTC', 'ETH') 0.91
+Lowest pair:  ('ADA', 'BTC') 0.68
+
+=== PERFORMANCE (sampled snapshots) ===
+      total_change_%  max_drawdown_%
+coin                                
+BTC             -4.8           -11.7
+BNB             -7.6           -12.9
+ETH            -10.0           -20.1
+XRP            -15.0           -23.4
+SOL            -18.7           -25.9
+ADA            -20.6           -32.4
